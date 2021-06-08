@@ -23,9 +23,7 @@
 //System
 #include <assert.h>
 
-ProfileImportDlg::ProfileImportDlg(QWidget* parent)
-	: QDialog(parent, Qt::Tool)
-	, Ui::ProfileImportDlg()
+ProfileImportDlg::ProfileImportDlg(QWidget* parent): QDialog(parent, Qt::Tool), Ui::ProfileImportDlg()
 {
 	setupUi(this);
 

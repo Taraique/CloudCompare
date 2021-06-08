@@ -160,7 +160,6 @@ void qSRA::loadProfile() const
 	QSettings settings;
 	settings.beginGroup("qSRA");
 	QString path = settings.value("importPath", ccFileUtils::defaultDocPath()).toString();
-
 	ProfileImportDlg piDlg(m_app->getMainWindow());
 	piDlg.setDefaultFilename(path);
 

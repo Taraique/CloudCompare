@@ -1,6 +1,6 @@
 {
 	"type" : "Standard",
-	"name" : "Example (Standard Plugin)",
+	"name" : "Seismic Events Delimiter",
 	"icon" : ":/CC/plugin/ExamplePlugin/images/icon.png",
 	"description": "This is a description of the marvelous Example plugin. It does nothing.",
 	"authors" : [
@@ -20,7 +20,7 @@
 
 		},
 		{
-			"text" : "I thought of creating this wonderful plugin while I was hiking up &#x26f0; Mont Blanc"
+			"text" : ""
 		}
 	]
 }

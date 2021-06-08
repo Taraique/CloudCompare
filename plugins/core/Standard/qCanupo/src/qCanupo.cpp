@@ -52,7 +52,6 @@ void qCanupoPlugin::onNewSelection(const ccHObject::Container& selectedEntities)
 	{
 		m_trainAction->setEnabled(m_app && m_app->dbRootObject() && m_app->dbRootObject()->getChildrenNumber() != 0); //need some loaded entities to train the classifier!
 	}
-
 	m_selectedEntities = selectedEntities;
 }
 

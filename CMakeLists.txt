@@ -2,6 +2,8 @@ cmake_minimum_required( VERSION 3.10 )
 
 project( CloudCompareProjects )
 
+set (CMAKE_PREFIX_PATH "C:/Qt/Qt5.9.9/5.9.9/msvc2017_64/")
+
 # One shouldn't generate the BUILD project directly in the SOURCES folder!
 if ( ${CMAKE_CURRENT_BINARY_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR} )
 	if ( NOT SAME_BUILD_AND_SOURCE_FOLDER_WARNING_ALREADY_ISSUED )
