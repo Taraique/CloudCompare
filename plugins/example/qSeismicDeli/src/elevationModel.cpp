@@ -8,7 +8,6 @@
 #include <QSettings>
 #include <QCloseEvent>
 
-
 //qCC_fbo
 #include <ccGlFilter.h>
 #include <ccGLWidget.h>
@@ -66,7 +65,7 @@ elevationModel::elevationModel(float hU, float lU, float hV, float lV, ccMainApp
 
 	m_app->dispToConsole(QString::number(hU) + "   " + QString::number(lU) + "   " + QString::number(lengthU));
 
-
+	pxBOX->setSingleStep(0.01);
 	//PENSER A FAIRE LE DESTRUCTEUR
 }
 
@@ -89,51 +88,28 @@ void elevationModel::on_cmBOX_valueChanged(double arg1) {
 }
 
 void elevationModel::on_pxBOX_valueChanged(double arg1) {
+	step = arg1;
 
-	double step;
-
-	step = arg1 / 10;
-
-	generateGrid(step);
+	generateGrid();
 	//cmBOX->setValue(truc * 2);
 }
 
-void elevationModel::on_buttonBox_accepted()
+void elevationModel::on_Generate_clicked()
 {
-	pixelValue = pxBOX->value();
-	if (!FilePath->text().isEmpty())
-		exampleValue = 1;
+	Variogram();
+}
 
+void elevationModel::on_Close_clicked()
+{
 	close();
 }
 
-void elevationModel::on_buttonBox_rejected()
-{
-	
-	close();
-}
+void elevationModel::generateGrid() {
 
-void elevationModel::getUVH() {
-
-}
-
-void elevationModel::generateGrid(double step) {
+	if (step == 0)
+		return;
 
 	delete[] grid;
-
-
-
-	//FAIRE UNE FONCTION !!!!
-	if (lowestU < 0 && highestU < 0) {
-		float lowestUSubstitute = lowestU;
-		lowestU = abs(highestU);
-		highestU = abs(lowestUSubstitute);
-	}
-	if (lowestV < 0 && highestV < 0) {
-		float lowestVSubstitute = lowestV;
-		lowestV = abs(highestV);
-		highestV = abs(lowestVSubstitute);
-	}
 
 	//faire un assert ici par rapport à u & v
 	CCCoreLib::ScalarField* u = cloud->getScalarField(cloud->getScalarFieldIndexByName("u"));
@@ -144,19 +120,13 @@ void elevationModel::generateGrid(double step) {
 	float uStep = lengthU / step;
 	float vStep = lengthV / step;
 
-	/*if (pxBOX->value() == 0) {
-		m_glWindow->displayNewMessage("Put a value in px or cm", ccGLWindow::UPPER_CENTER_MESSAGE, false, 3600, ccGLWindow::CUSTOM_MESSAGE);
-		m_glWindow->redraw();
-		return;
-	}*/
+	nbOfColumns = lengthV / step + 1 ;
+	nbOfLines = lengthU / step + 1 ;
+	numberOfBoxes = nbOfLines * nbOfColumns;
 
-	int nbOfColumns = lengthV / step + 1 ;
-	int nbOfLines = lengthU / step + 1 ;
-	int numberOfBoxes = nbOfLines * nbOfColumns;
+	m_app->dispToConsole( "   " + QString::number(numberOfBoxes));
 
-	m_app->dispToConsole(QString::number(nbOfColumns) + "  " + QString::number(nbOfLines) + "   " + QString::number(numberOfBoxes) + "  " + QString::number(lengthU) + "  " + QString::number(lengthV));
-
-	grid = new std::vector<const CCVector3*>[numberOfBoxes];
+	grid = new std::vector<int>[numberOfBoxes];
 
 	float uCoord = lowestU;
 	float vCoord = lowestV;
@@ -166,31 +136,178 @@ void elevationModel::generateGrid(double step) {
 
 	int pos;
 
+	int l = 0;
+	int ll = 0;
+
+	test = nbOfColumns + 80;
 
 	for (int i = 0; i < nbOfPoints; i++) {
 
-		currentPointLine = (abs(u->getValue(i)) - lowestU)/step;
-		currentPointColumn = ( abs(v->getValue(i)) - lowestV)/step;
-		pos = currentPointLine * nbOfLines + currentPointColumn;
+		currentPointLine =  trunc((u->getValue(i) - lowestU) / step);
+		currentPointColumn =  trunc((v->getValue(i) - lowestV)  / step);
 
+		pos = currentPointLine * nbOfColumns + currentPointColumn;
 
-		
-
-		
 		if (currentPointColumn % 2 == 0 && currentPointLine % 2 == 0 || currentPointColumn % 2 != 0 && currentPointLine % 2 != 0)
 			cloud->setPointColor(i, ccColor::orangeRGB);
 		else
 			cloud->setPointColor(i, ccColor::blueRGB);
 
-		//grid[currentPointLine * nbOfLines + currentPointColumn].push_back(cloud->getPoint(i));
+		grid[pos].push_back(i);
 	}
-
-	m_app->dispToConsole("BBBBBBBB " + QString::number(abs(u->getValue(30))) + "  " + QString::number(abs(u->getValue(30)) - lowestU) + "  " + QString::number(step));
 
 	m_glWindow->redraw();
 }
 
-
 void elevationModel::on_browseToolButton_clicked() {
-	generateGrid(0.1);
+	QString filePath =
+		QFileDialog::getSaveFileName(this, "Where to save the results", "results",
+			"CSV(*.csv);;Text files (*.txt)");
+	FilePath->setText(filePath);
 }
+
+float elevationModel::findT(std::vector<int> box) {
+	int nbOfPointsInBox = box.size();
+
+	float T = 0;
+	float currentMin;
+	float tempDistance;
+	const CCVector3* currentPoint;
+	for (int i = 0; i < nbOfPointsInBox; i++) {
+		currentMin = INFINITY;
+		currentPoint = (cloud->getPoint(box.at(i)));
+		for (int j = 0; j < nbOfPointsInBox; j++) {
+			tempDistance = distance(currentPoint, cloud->getPoint(box.at(j)));
+			if (currentMin > tempDistance && tempDistance != 0)
+				currentMin = tempDistance;
+		}
+		T += currentMin;
+	}
+
+	T /= nbOfPointsInBox;
+	return T;
+}
+
+double elevationModel::distance(const CCVector3* point1, const CCVector3* point2) {
+	return sqrt(
+		pow(point1->x - point2->x, 2) +
+		pow(point1->y - point2->y, 2) +
+		pow(point1->z - point2->z, 2)
+	);
+}
+
+void elevationModel::Variogram() {
+	int a;
+	CCCoreLib::ScalarField* h = cloud->getScalarField(cloud->getScalarFieldIndexByName("h"));
+
+	float T = findT(grid[test]);
+	int nbOfT = round((step * 2) / (4 * T));
+
+
+	m_app->dispToConsole(QString::number(nbOfT) + "  " + QString::number(T) + "  ");
+
+	int nbOfCells = numberOfBoxes * nbOfT;
+	
+	auto couplesDirectory = new std::vector<coupleOfPoints>[nbOfCells];
+	double* gammaResults = new double[nbOfCells];
+
+	coupleOfPoints currentCouple;
+	int TPosition;
+	
+
+	int nbOfPointsInCell;
+
+	for (int currentCell = 0; currentCell < numberOfBoxes; currentCell++) {
+		nbOfPointsInCell = grid[currentCell].size();
+
+		for (int i = 0; i < nbOfPointsInCell; i++) {
+			currentCouple.firstSpouse = grid[currentCell].at(i);
+			for (int j = i; j < nbOfPointsInCell; j++) {
+				currentCouple.secondSpouse = grid[currentCell].at(j);
+				TPosition = round(distance(cloud->getPoint(currentCouple.firstSpouse), cloud->getPoint(currentCouple.secondSpouse)) / T);
+				if (TPosition <= nbOfT && TPosition > 0) {																						//probablement inutile
+					TPosition -=  1;
+					couplesDirectory[currentCell * nbOfT + TPosition].push_back(currentCouple);
+					a++;
+				}
+			}
+		}
+	}
+	m_app->dispToConsole(QString::number(a));
+	delete[] grid;
+
+	float currentGammaResult;
+	float machin;
+	int nbOfCouplesInCell;
+	int TMultiplier = 1;
+
+	for (int currentCell = 0; currentCell < nbOfCells; currentCell++)
+	{
+		nbOfCouplesInCell = couplesDirectory[currentCell].size();
+		currentGammaResult = 0;
+
+		for (int i = 0; i < nbOfCouplesInCell; i++)
+		{
+			currentCouple = couplesDirectory[currentCell].at(i);
+			currentGammaResult += pow(
+				h->getValue(currentCouple.firstSpouse) - (h->getValue(currentCouple.secondSpouse) + T*TMultiplier)
+				, 2);
+		}
+		if (nbOfCouplesInCell == 0)
+			currentGammaResult = -1;
+		else {
+
+			currentGammaResult *= (1. / (2. * nbOfCouplesInCell));
+		}
+
+		if (currentCell == 3 || currentCell == 12 || currentCell == 3000 || currentCell == 800) {
+			m_app->dispToConsole(QString::number(nbOfCouplesInCell) + "   "  + QString::number(1./(2.* nbOfCouplesInCell))
+				+ "   " + QString::number(currentGammaResult));
+
+		}
+
+		TMultiplier++;
+		gammaResults[currentCell] = currentGammaResult;
+		if (TMultiplier > nbOfT)
+			TMultiplier = 1;
+	}
+
+	//Writing the result
+
+	QFile file(FilePath->text()); 
+	if (file.open(QIODevice::WriteOnly | QIODevice::Text))
+	{
+		// We're going to streaming text to the file
+		QTextStream stream(&file);
+		stream << "T;  ";
+
+		for (size_t i = 0; i < nbOfLines;i++)
+		{
+			for (size_t j = 0; j < nbOfColumns; j = j + 1)
+			{
+				stream << "C" << i<<"_"<< j << ";  ";
+			}
+		}
+		stream << "\n";
+		
+		for (size_t currentT = 0; currentT < nbOfT; currentT++)
+		{
+			stream << T << currentT <<"= " << T * (currentT + 1) << ";  ";
+
+			for (size_t i = currentT; i < nbOfCells; i = i + nbOfT)
+			{
+				stream << gammaResults[i] << ";  ";
+			}
+			stream << ";\n";
+		}
+
+		file.close();
+		qDebug() << "Writing finished";
+	}
+
+
+
+
+	delete[] couplesDirectory;
+	delete[] gammaResults;
+} 

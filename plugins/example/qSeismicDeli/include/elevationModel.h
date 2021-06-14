@@ -33,24 +33,34 @@ private:
     //! Boxes container
     ccHObject* m_boxes;
     ccPointCloud* cloud;
-    void getUVH();
-    //std::vector<CCVector3> clickedPoints;
-
+    void Variogram();
+    int numberOfBoxes;
     float highestU;
     float highestV;
     float lowestU;
     float lowestV;
     float lengthU;
     float lengthV;
-    std::vector<const CCVector3 *>* grid = new std::vector<const CCVector3 *>[0];
-    void generateGrid(double step);
+    std::vector<int>* grid = new std::vector<int>[0];
+    void generateGrid();
+    double distance(const CCVector3* point1, const CCVector3* point2);
+    float findT(std::vector<int> box);
+    double step;
+    int test;
+    int nbOfColumns;
+    int nbOfLines;
+
+    struct coupleOfPoints {
+        int firstSpouse;
+        int secondSpouse;
+    };
 
 private slots:
     void on_cmBOX_valueChanged(double arg1);
     void on_pxBOX_valueChanged(double arg1);
-    void on_buttonBox_accepted();
-    void on_buttonBox_rejected();
     void on_browseToolButton_clicked();
+    void on_Generate_clicked();
+    void on_Close_clicked();
 };
 
 #endif // ELEVATIONMODEL_H
