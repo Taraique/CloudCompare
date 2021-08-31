@@ -98,7 +98,7 @@ qBroomDlg::qBroomDlg(ccMainAppInterface* app/*=0*/)
 	setupUi(this);
 
 	lostTrackFrame->setVisible(false);
-
+	/*
 	//load persistent settings
 	int selectionMode = selectionModeComboBox->currentIndex();
 	{
@@ -111,10 +111,11 @@ qBroomDlg::qBroomDlg(ccMainAppInterface* app/*=0*/)
 		stickCheckBox->setChecked(stickToTheFloor);
 		animateAutomationCheckBox->setChecked(animateAutomation);
 	}
-
+	
 	//force update
 	selectionModeComboBox->setCurrentIndex(selectionMode);
 	onSelectionModeChanged(selectionMode);
+	*/
 
 	//create 3D view
 	{
@@ -133,7 +134,7 @@ qBroomDlg::qBroomDlg(ccMainAppInterface* app/*=0*/)
 	}
 
 	//items
-	{
+	 {
 		m_broomBox->setEnabled(true);
 		m_broomBox->setDisplay(m_glWindow);
 

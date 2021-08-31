@@ -22,7 +22,7 @@
 
 //! qSeismicDeli qCC plugin
 /** Replace 'qSeismicDeli' by your own plugin class name throughout and then
-        check 'qSeismicDeli.cpp' for more directions.
+		check 'qSeismicDeli.cpp' for more directions.
 
 	Each plugin requires an info.json file to provide information about itself -
 	the name, authors, maintainers, icon, etc..
@@ -42,23 +42,22 @@
 class qSeismicDeli : public QObject, public ccStdPluginInterface
 {
 	Q_OBJECT
-	Q_INTERFACES( ccPluginInterface ccStdPluginInterface )
+		Q_INTERFACES(ccPluginInterface ccStdPluginInterface)
 
-        // Replace "qSeismicDeli" by your plugin name (IID should be unique - let's hope your plugin name is unique ;)
-	// The info.json file provides information about the plugin to the loading system and
-	// it is displayed in the plugin information dialog.
-        Q_PLUGIN_METADATA( IID "cccorp.cloudcompare.plugin.qSeismicDeli" FILE "../info.json" )
+		// Replace "qSeismicDeli" by your plugin name (IID should be unique - let's hope your plugin name is unique ;)
+	   // The info.json file provides information about the plugin to the loading system and
+	   // it is displayed in the plugin information dialog.
+		Q_PLUGIN_METADATA(IID "cccorp.cloudcompare.plugin.qSeismicDeli" FILE "../info.json")
 
 public:
-        explicit qSeismicDeli( QObject *parent = nullptr );
-        ~qSeismicDeli() override = default;
+	explicit qSeismicDeli(QObject* parent = nullptr);
+	~qSeismicDeli() override = default;
 
 	// Inherited from ccStdPluginInterface
-	void onNewSelection( const ccHObject::Container &selectedEntities ) override;
+	void onNewSelection(const ccHObject::Container& selectedEntities) override;
 	void ElevationModel();
 	void GenerateEigens();
-	void test();
-	QList<QAction *> getActions() override;
+	QList<QAction*> getActions() override;
 
 private:
 	//! Default action
@@ -68,10 +67,6 @@ private:
 	**/
 	QAction* m_elevationModelAction;
 	QAction* m_generateEigenData;
-	QAction* m_test;
-
-
-	void launchEM();
 
 private:
 	elevationModel* eM;
@@ -82,7 +77,7 @@ private:
 	float highestV = -INFINITY;
 	float lowestU = INFINITY;
 	float lowestV = INFINITY;
-
+	const CCVector3* centroid;
 
 
 
